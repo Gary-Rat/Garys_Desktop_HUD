@@ -1,0 +1,84 @@
+name: Build Windows
+
+# 打 v* tag 自动出包并发布；也可以在 Actions 页面手动触发
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '发布 tag（留空 = 用 package.json 的版本号，例如 v0.0.0）'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 准备 Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 构建前端 + 打包 portable 免安装版
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: |
+          npm run build
+          npx electron-builder --win portable
+
+      - name: 产物改名（中文名在浏览器下载时易乱码）
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $src = Get-ChildItem release/*.exe | Select-Object -First 1
+          $newName = "Desktop-HUD-$version-x64-portable.exe"
+          Rename-Item -LiteralPath $src.FullName -NewName $newName -Force
+          Get-ChildItem release | Format-Table Name, @{n='MB';e={[math]::Round($_.Length/1MB,1)}}
+
+      - name: 上传 Actions 产物（保留 30 天）
+        uses: actions/upload-artifact@v4
+        with:
+          name: Desktop-HUD-windows-portable
+          path: release/*.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: 发布到 Release
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ($env:GITHUB_REF -like 'refs/tags/*') {
+            $tag = $env:GITHUB_REF -replace 'refs/tags/', ''
+          } elseif ('${{ inputs.tag }}'.Trim() -ne '') {
+            $tag = '${{ inputs.tag }}'.Trim()
+          } else {
+            $tag = "v$version"
+          }
+          Write-Host "tag = $tag"
+          $exe = (Get-ChildItem release/*.exe | Select-Object -First 1).FullName
+          gh release view $tag --repo $env:GITHUB_REPOSITORY 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag $exe --clobber --repo $env:GITHUB_REPOSITORY
+          } else {
+            gh release create $tag $exe `
+              --repo $env:GITHUB_REPOSITORY `
+              --title "Desktop HUD $tag" `
+              --target $env:GITHUB_SHA `
+              --notes "Windows portable 免安装版：下载 exe 双击即可运行，无需安装 Node.js 或 npm。"
+          }
