@@ -38,7 +38,13 @@
 - `electron/preload.cjs` — 预加载桥
 - `src/electron.d.ts` — 类型桥接
 
-## 快速开始
+## 直接使用（免安装，不需要 Node.js）
+
+到 [Releases](https://github.com/Gary-Rat/Garys_Desktop_HUD/releases) 下载 `Desktop-HUD-<版本>-x64-portable.exe`（Windows x64 免安装版），双击直接运行。
+
+这个 exe 由 GitHub Actions 在 `windows-latest` 上自动构建（`.github/workflows/build-windows.yml`）：推 `v*` tag 会自动出包并挂到 Release，也可以在 Actions 页面手动触发一次。所以换一台电脑不需要装 Node.js / npm，也不用 clone 源码。
+
+## 快速开始（本地开发）
 
 需要 Node.js 与 npm（项目未声明 `engines`，建议 Node 20 以上）。
 
