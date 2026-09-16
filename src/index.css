@@ -1,0 +1,61 @@
+:root {
+  font-family:
+    'Segoe UI Variable Display', 'Microsoft YaHei UI', 'PingFang SC', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+  background: transparent;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    linear-gradient(rgba(12, 11, 16, 0.3), rgba(12, 11, 16, 0.44)),
+    url('https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1600&q=80')
+      center / cover fixed;
+}
+
+body[data-runtime='desktop'] {
+  background: transparent;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    opacity 180ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid rgba(234, 233, 255, 0.68);
+  outline-offset: 2px;
+}
